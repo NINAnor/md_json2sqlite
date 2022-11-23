@@ -1,6 +1,7 @@
 import argparse
 import json
 import sqlite_utils
+import tqdm
 
 def main(json_file, output_sqlite, recreate):
 
@@ -9,24 +10,31 @@ def main(json_file, output_sqlite, recreate):
     with open(json_file) as f:
         j = json.load(f)
 
-    for row in j['images']:
-        file = row['file']
-        detections = row['detections']
+    for image in tqdm.tqdm(j['images']):
+    
+        file = image['file']
+    
+        try:
+    
+            detections = image['detections']
 
-        for detection in detections:
-            category = detection['category']
-            conf = detection['conf']
-            bbox = detection['bbox']
+            for detection in detections:
+                category = detection['category']
+                conf = detection['conf']
+                bbox = detection['bbox']
 
-            db['mdout'].insert_all([{
-                "file": file,
-                "category": category,
-                "conf": conf,
-                "x_min": bbox[0],
-                "y_min": bbox[1],
-                "x_max": bbox[2],
-                "y_max": bbox[3]
-        }])
+                db['mdout'].insert_all([{
+                    "file": file,
+                    "category": category,
+                    "conf": conf,
+                    "x_min": bbox[0],
+                    "y_min": bbox[1],
+                    "x_max": bbox[2],
+                    "y_max": bbox[3]
+            }])
+            
+        except:
+            print(f"Failed to insert {file} in the database")
 
 if __name__ == "__main__":
 
